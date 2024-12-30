@@ -1,0 +1,29 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  DOCKER_REPOSITORY: 'yourdockerhub/demo-app'
+  DOCKER_TAG: '$(Build.BuildId)'
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean package'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.17'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'docker-hub-connection'
+    repository: $(DOCKER_REPOSITORY)
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile'
+    tags: |
+      $(DOCKER_TAG)
+      latest
